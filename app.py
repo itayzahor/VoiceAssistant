@@ -524,14 +524,26 @@ SCENE_TEMPLATE = r"""
     return segments;
   }
 
-  window.speakWaiter = function() {
+  function getVoicesReady(callback) {
+    var voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) { callback(); return; }
+    var called = false;
+    window.speechSynthesis.onvoiceschanged = function() {
+      if (called) return;
+      called = true;
+      callback();
+    };
+    setTimeout(function() { if (!called) { called = true; callback(); } }, 1000);
+  }
+
+  function doSpeakWaiter() {
     if (!waiterText) return;
     clearPendingHighlights();
     if (activeTip) { activeTip.remove(); activeTip = null; }
     wordBoundaries.forEach(function(b) { b.span.classList.remove('read'); });
 
     var segments = parseSegments(waiterText);
-    var charsPerSecond = 13;
+    var charsPerSecond = 11;
     var cumulativeMs = 0;
 
     segments.forEach(function(seg) {
@@ -569,6 +581,10 @@ SCENE_TEMPLATE = r"""
 
     window.speechSynthesis.cancel();
     speakSegment(0);
+  }
+
+  window.speakWaiter = function() {
+    getVoicesReady(doSpeakWaiter);
   };
 
   var lastAppliedWaiterText = null;
@@ -677,13 +693,29 @@ def speech_widget(text, autoplay, word_translations=None):
         pendingHighlights = [];
       }}
 
+      function getVoicesReady(callback) {{
+        var voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {{ callback(); return; }}
+        var called = false;
+        window.speechSynthesis.onvoiceschanged = function() {{
+          if (called) return;
+          called = true;
+          callback();
+        }};
+        setTimeout(function() {{ if (!called) {{ called = true; callback(); }} }}, 1000);
+      }}
+
       function speak() {{
+        getVoicesReady(doSpeak);
+      }}
+
+      function doSpeak() {{
         clearPendingHighlights();
         if (activeTip) {{ activeTip.remove(); activeTip = null; }}
         if (textEl) {{
           boundaries.forEach(function(b) {{ b.span.classList.remove('read'); }});
           var totalChars = targetText.length;
-          var charsPerSecond = 13;
+          var charsPerSecond = 11;
           var totalDurationMs = Math.max(500, (totalChars / charsPerSecond) * 1000);
           boundaries.forEach(function(b) {{
             var wordEndChar = b.start + b.span.textContent.length;
