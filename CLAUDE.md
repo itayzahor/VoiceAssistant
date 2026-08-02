@@ -5,7 +5,7 @@
 # Tech Stack & Guidelines
 - Language: Python 3
 - UI Framework: Streamlit (use `streamlit-audiorecorder` for the microphone)
-- Core APIs: OpenAI (Whisper for STT, GPT-4o-mini for LLM logic, TTS for audio output)
+- Core APIs: OpenAI (Whisper `whisper-1` for STT, `gpt-4o-mini` for LLM logic). TTS uses the browser's built-in Web Speech API (client-side JS, no API call) instead of a cloud TTS model — tried Gemini's free tier for everything first, but its per-model daily request caps (10-20/day) were too low to develop against reliably.
 - Execution: Run the app locally with `streamlit run app.py`
 
 # Coding Directives
